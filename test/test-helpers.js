@@ -1,3 +1,5 @@
+const bcrypt = require('bcryptjs')
+
 function makeUsersArray() {
   return [
     {
@@ -133,7 +135,7 @@ function makeReviewsArray(users, things) {
   ];
 }
 
-function makeExpectedThing(users, thing, reviews=[]) {
+function makeExpectedThing(users, thing, reviews = []) {
   const user = users
     .find(user => user.id === thing.user_id)
 
@@ -162,11 +164,11 @@ function makeExpectedThing(users, thing, reviews=[]) {
 }
 
 function calculateAverageReviewRating(reviews) {
-  if(!reviews.length) return 0
+  if (!reviews.length) return 0
 
   const sum = reviews
     .map(review => review.rating)
-    .reduce((a, b) => a + b)
+    .reduce((a, b) => a, b)
 
   return Math.round(sum / reviews.length)
 }
@@ -223,14 +225,14 @@ function makeThingsFixtures() {
 function cleanTables(db) {
   return db.raw(
     `TRUNCATE
+      thingful_reviews,
       thingful_things,
-      thingful_users,
-      thingful_reviews
+      thingful_users
       RESTART IDENTITY CASCADE`
   )
 }
 
-function seedThingsTables(db, users, things, reviews=[]) {
+function seedThingsTables(db, things, reviews = []) {
   return db
     .into('thingful_users')
     .insert(users)
@@ -255,6 +257,11 @@ function seedMaliciousThing(db, user, thing) {
     )
 }
 
+function makeAuthHeader(user) {
+  const token = Buffer.from(`${user.user_name}:${user.password}`).toString('base64')
+  return `Basic ${token}`
+}
+
 module.exports = {
   makeUsersArray,
   makeThingsArray,
@@ -267,4 +274,5 @@ module.exports = {
   cleanTables,
   seedThingsTables,
   seedMaliciousThing,
+  makeAuthHeader,
 }
